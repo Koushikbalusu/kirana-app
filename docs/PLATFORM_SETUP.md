@@ -23,9 +23,18 @@ the full list of expected variable names.
 1. Credentials are created at **cloud.olakrutrim.com** (not a separate "Ola
    Maps" site).
 2. Sign up / log in, go to Credentials / KMS section, create a new API key.
-3. Whitelist `localhost` and `localhost:3000` for local dev.
+3. In **Allowed Domains**, enter **bare domains only** — no `https://`
+   prefix, no trailing slash (their own placeholder shows the expected
+   format: `example.com, *.example.com`). e.g.
+   `localhost,localhost:3000,kirana-app-eight.vercel.app`. **Click Save** —
+   typing into the field alone doesn't persist it.
 4. Copy the key → `NEXT_PUBLIC_OLA_MAPS_API_KEY` (also `OLA_MAPS_API_KEY` if
    calling Ola Maps server-side too).
+5. Server-side calls (ours run through `/api/maps/*` Next.js routes, not
+   the browser) don't send a browser `Origin` header naturally, so
+   `src/lib/maps/ola.ts` sends a fixed one matching the whitelisted domain.
+   If the production domain ever changes, update `OLA_MAPS_ALLOWED_ORIGIN`
+   env var (or the fallback default in that file) to match.
 
 ## 4. Bunny (Storage + CDN)
 1. Sign up at bunny.net.
