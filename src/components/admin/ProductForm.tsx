@@ -12,6 +12,7 @@ import { useCategoryStore } from "@/stores/categoryStore";
 import { useProductStore } from "@/stores/productStore";
 import type { Product } from "@/lib/data/mock";
 import { Trash2, Plus } from "lucide-react";
+import { ImageUpload } from "@/components/shared/ImageUpload";
 
 const variantSchema = z.object({
   label: z.string().min(1, "Required"),
@@ -40,6 +41,8 @@ export function ProductForm({ existing }: { existing?: Product }) {
   const categories = useCategoryStore((s) => s.categories);
   const { addProduct, updateProduct } = useProductStore();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(existing?.image_url ?? null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(existing?.thumbnail_url ?? null);
 
   const {
     register,
@@ -80,6 +83,8 @@ export function ProductForm({ existing }: { existing?: Product }) {
       ...values,
       name_te_transliteration: values.name_te_transliteration ?? "",
       name_te_script: values.name_te_script ?? "",
+      image_url: imageUrl,
+      thumbnail_url: thumbnailUrl,
     };
     try {
       if (existing) {
@@ -117,6 +122,16 @@ export function ProductForm({ existing }: { existing?: Product }) {
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl space-y-4">
       <Card>
         <CardBody className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium">Product image</label>
+            <ImageUpload
+              type="product"
+              onUploaded={({ imageUrl: u, thumbnailUrl: t }) => {
+                setImageUrl(u);
+                setThumbnailUrl(t);
+              }}
+            />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium">Name (English)</label>

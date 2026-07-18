@@ -29,8 +29,17 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Card className="flex flex-col">
       <CardBody className="flex flex-1 flex-col gap-3">
-        <div className="flex h-24 items-center justify-center rounded-md bg-neutral-100 text-neutral-400 dark:bg-neutral-900 dark:text-neutral-600">
-          <span className="text-xs">No image yet</span>
+        <div className="flex h-24 items-center justify-center overflow-hidden rounded-md bg-neutral-100 text-neutral-400 dark:bg-neutral-900 dark:text-neutral-600">
+          {product.thumbnail_url || product.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={product.thumbnail_url || product.image_url || ""}
+              alt={product.name_en}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="text-xs">No image yet</span>
+          )}
         </div>
 
         <div>

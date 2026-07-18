@@ -45,6 +45,8 @@ export interface Product {
   base_price: number; // paise
   status: ProductStatus;
   variants: Variant[];
+  image_url?: string | null;
+  thumbnail_url?: string | null;
 }
 
 export interface Store {
