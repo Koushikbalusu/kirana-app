@@ -1,0 +1,42 @@
+"use client";
+
+import { useOrderStore } from "@/stores/orderStore";
+import { products } from "@/lib/data/mock";
+import { Card, CardBody } from "@/components/ui/card";
+import { formatPrice } from "@/lib/utils/format";
+
+export default function AdminDashboard() {
+  const orders = useOrderStore((s) => s.orders);
+
+  const totalOrders = orders.length;
+  const pendingDeliveries = orders.filter(
+    (o) => o.type === "DELIVERY" && o.status !== "DELIVERED" && o.status !== "CANCELLED"
+  ).length;
+  const deliveryCount = orders.filter((o) => o.type === "DELIVERY").length;
+  const pickupCount = orders.filter((o) => o.type === "PICKUP").length;
+  const revenue = orders.reduce((sum, o) => sum + o.total, 0);
+
+  const stats = [
+    { label: "Total Orders", value: totalOrders },
+    { label: "Pending Deliveries", value: pendingDeliveries },
+    { label: "Delivery vs Pickup", value: `${deliveryCount} / ${pickupCount}` },
+    { label: "Total Revenue", value: formatPrice(revenue) },
+    { label: "Active Products", value: products.filter((p) => p.status !== "HIDDEN").length },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-xl font-semibold">Analytics Dashboard</h1>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {stats.map((s) => (
+          <Card key={s.label}>
+            <CardBody>
+              <p className="text-xs text-neutral-500">{s.label}</p>
+              <p className="mt-1 text-lg font-semibold">{s.value}</p>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}

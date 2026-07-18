@@ -1,0 +1,10 @@
+{
+  "name": "Kirana Commerce",
+  "short_name": "Kirana",
+  "description": "Digital ordering and delivery management for your neighborhood kirana store.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#171717",
+  "icons": []
+}
