@@ -19,7 +19,7 @@ export default async function DeliveryPartnersPage() {
             <tr>
               <th className="px-4 py-2 font-medium">Name</th>
               <th className="px-4 py-2 font-medium">Phone</th>
-              <th className="px-4 py-2 font-medium">Email</th>
+              <th className="px-4 py-2 font-medium">Login (Email / Username)</th>
               <th className="px-4 py-2 font-medium">Password</th>
               <th className="px-4 py-2 font-medium"></th>
             </tr>

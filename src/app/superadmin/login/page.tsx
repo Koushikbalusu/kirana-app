@@ -7,5 +7,5 @@ async function superadminLogin(prevState: LoginState, formData: FormData) {
 }
 
 export default function SuperadminLoginPage() {
-  return <LoginForm title="Superadmin Login" demoEmail="super@kirana.app" action={superadminLogin} />;
+  return <LoginForm title="Superadmin Login" demoIdentifier="superadmin" action={superadminLogin} />;
 }

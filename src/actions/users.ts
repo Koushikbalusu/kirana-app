@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users as usersTable } from "@/lib/db/schema";
 import { hashPassword, verifyPassword, type Role } from "@/lib/auth/users";
@@ -12,19 +12,33 @@ export interface UserRecord {
   id: string;
   name: string;
   email: string;
+  username: string | null;
   phone: string | null;
   role: Role;
 }
 
 function toUserRecord(row: typeof usersTable.$inferSelect): UserRecord {
-  return { id: row.id, name: row.name, email: row.email, phone: row.phone, role: row.role as Role };
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    username: row.username,
+    phone: row.phone,
+    role: row.role as Role,
+  };
 }
 
-export async function getUserByEmail(email: string): Promise<
+/** Looks up by email OR username -- either can be used to sign in. */
+export async function getUserByIdentifier(identifier: string): Promise<
   (UserRecord & { passwordHash: string }) | null
 > {
   if (!db) return null;
-  const rows = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase())).limit(1);
+  const value = identifier.trim().toLowerCase();
+  const rows = await db
+    .select()
+    .from(usersTable)
+    .where(or(eq(usersTable.email, value), eq(usersTable.username, value)))
+    .limit(1);
   if (rows.length === 0) return null;
   return { ...toUserRecord(rows[0]), passwordHash: rows[0].passwordHash };
 }
@@ -38,18 +52,27 @@ export async function createDeliveryPartner(input: {
   name: string;
   phone: string;
   email: string;
+  username: string;
   password: string;
 }): Promise<CreateDeliveryPartnerResult> {
   await requireStaffSession();
   if (!db) return { error: "Database isn't configured yet." };
 
   const email = input.email.trim().toLowerCase();
-  const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+  const username = input.username.trim().toLowerCase();
+  const existing = await db
+    .select()
+    .from(usersTable)
+    .where(or(eq(usersTable.email, email), eq(usersTable.username, username)))
+    .limit(1);
   if (existing.length > 0) {
-    return { error: "An account with this email already exists." };
+    return { error: "An account with this email or username already exists." };
   }
   if (input.password.length < 6) {
     return { error: "Password must be at least 6 characters." };
+  }
+  if (username.length < 3) {
+    return { error: "Username must be at least 3 characters." };
   }
 
   const inserted = await db
@@ -59,6 +82,7 @@ export async function createDeliveryPartner(input: {
       name: input.name.trim(),
       phone: input.phone.trim(),
       email,
+      username,
       passwordHash: hashPassword(input.password),
       role: "DELIVERY_PARTNER",
     })

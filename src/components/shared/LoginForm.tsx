@@ -8,12 +8,14 @@ import type { LoginState } from "@/actions/auth";
 
 export function LoginForm({
   title,
-  demoEmail,
+  demoIdentifier,
   action,
+  footer,
 }: {
   title: string;
-  demoEmail: string;
+  demoIdentifier: string;
   action: (prevState: LoginState, formData: FormData) => Promise<LoginState>;
+  footer?: React.ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
 
@@ -24,14 +26,15 @@ export function LoginForm({
           <div>
             <h1 className="text-lg font-semibold">{title}</h1>
             <p className="mt-1 text-xs text-neutral-500">
-              Demo login — email <code>{demoEmail}</code>, password{" "}
-              <code>kirana123</code>
+              Demo login — email or username <code>{demoIdentifier}</code>,
+              password <code>kirana123</code>
             </p>
           </div>
+          {footer && <div>{footer}</div>}
           <form action={formAction} className="space-y-3">
             <div>
-              <label className="mb-1 block text-sm font-medium">Email</label>
-              <Input name="email" type="email" required defaultValue={demoEmail} />
+              <label className="mb-1 block text-sm font-medium">Email or Username</label>
+              <Input name="identifier" required defaultValue={demoIdentifier} />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Password</label>

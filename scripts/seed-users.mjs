@@ -23,21 +23,26 @@ function hashPassword(password, salt = randomBytes(16).toString("hex")) {
 const DEMO_PASSWORD_HASH = hashPassword("kirana123");
 
 const DEMO_USERS = [
-  { name: "Store Admin", email: "admin@kirana.app", role: "ADMIN", phone: null },
-  { name: "Ramesh Kumar", email: "delivery@kirana.app", role: "DELIVERY_PARTNER", phone: "9876543210" },
-  { name: "Platform Owner", email: "super@kirana.app", role: "SUPERADMIN", phone: null },
+  { name: "Store Admin", email: "admin@kirana.app", username: "admin", role: "ADMIN", phone: null },
+  { name: "Ramesh Kumar", email: "delivery@kirana.app", username: "ramesh", role: "DELIVERY_PARTNER", phone: "9876543210" },
+  { name: "Platform Owner", email: "super@kirana.app", username: "superadmin", role: "SUPERADMIN", phone: null },
 ];
 
 async function main() {
   for (const u of DEMO_USERS) {
-    const existing = await sql`select id from users where email = ${u.email}`;
+    const existing = await sql`select id, username from users where email = ${u.email}`;
     if (existing.length > 0) {
-      console.log(`Already exists: ${u.email}`);
+      if (!existing[0].username) {
+        await sql`update users set username = ${u.username} where email = ${u.email}`;
+        console.log(`Backfilled username for existing account: ${u.email} -> ${u.username}`);
+      } else {
+        console.log(`Already exists: ${u.email}`);
+      }
       continue;
     }
     await sql`
-      insert into users (store_id, name, email, phone, password_hash, role)
-      values (${STORE_ID}, ${u.name}, ${u.email}, ${u.phone}, ${DEMO_PASSWORD_HASH}, ${u.role})
+      insert into users (store_id, name, email, username, phone, password_hash, role)
+      values (${STORE_ID}, ${u.name}, ${u.email}, ${u.username}, ${u.phone}, ${DEMO_PASSWORD_HASH}, ${u.role})
     `;
     console.log(`Created: ${u.email} (${u.role})`);
   }

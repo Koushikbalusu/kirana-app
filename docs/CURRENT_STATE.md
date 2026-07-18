@@ -14,15 +14,28 @@ _Last updated: 2026-07-18_
 - All four role route groups built with working flows: customer catalog/
   cart/checkout, admin product/category/order/delivery/customer management,
   delivery partner dashboard, superadmin (now with full admin access).
-- **Auth is fully DB-backed** (Neon `users` table with `password_hash` +
-  `phone` columns) — no more hardcoded account list. Demo accounts seeded
-  via `scripts/seed-users.mjs`: admin@kirana.app / delivery@kirana.app /
-  super@kirana.app, password `kirana123` for all three. Admin/staff/
-  superadmin can add real delivery partner accounts (name/phone/email/
-  password) via `/admin/delivery/partners` — these are real logins, not
-  placeholder data. Partners and admins can change their own password at
-  `/{role}/settings`; admin/superadmin can reset any delivery partner's
-  password from the partners list.
+- **Auth is fully DB-backed** (Neon `users` table with `password_hash`,
+  `phone`, and `username` columns) — no more hardcoded account list. Demo
+  accounts seeded via `scripts/seed-users.mjs`, password `kirana123` for
+  all three:
+  - Admin: username `admin` / `admin@kirana.app`
+  - Delivery: username `ramesh` / `delivery@kirana.app`
+  - Superadmin: username `superadmin` / `super@kirana.app`
+  - **Login can use either email or username** (`getUserByIdentifier` in
+    `src/actions/users.ts`, `or()` query over both columns).
+  - **Unified login page** at `/login` for Admin and Delivery, with a
+    role-toggle (`src/components/shared/UnifiedLoginClient.tsx`) — no more
+    separate `/admin/login` and `/delivery/login` pages. **Superadmin is
+    intentionally kept on its own separate page** (`/superadmin/login`),
+    per explicit request, not merged into the toggle.
+  - `src/proxy.ts`'s redirect targets for the admin/delivery prefixes now
+    point to `/login?role=admin` / `/login?role=delivery` (query param
+    only pre-selects the toggle, doesn't gate anything).
+  - Admin/staff/superadmin can add real delivery partner accounts (name/
+    phone/email/**username**/password) via `/admin/delivery/partners` —
+    these are real logins, not placeholder data. Partners and admins can
+    change their own password at `/{role}/settings`; admin/superadmin can
+    reset any delivery partner's password from the partners list.
 - **Superadmin has full admin capability**, not just a read-only dashboard
   — `src/proxy.ts` now allows the `SUPERADMIN` role on every `/admin/*`
   route, and the superadmin nav links directly into `/admin`. This is
@@ -36,7 +49,14 @@ _Last updated: 2026-07-18_
   `src/actions/stores.ts`. Homepage, admin product list/create/edit, admin
   categories, and superadmin dashboard/stores all read live from Postgres.
   Live DB seeded with 1 store, 4 categories, 10 products (8 with variants)
-  via `scripts/seed.mjs` (idempotent — safe to re-run).
+  via `scripts/seed.mjs` (idempotent — safe to re-run). All 10 products now
+  have real `image_url`/`thumbnail_url` set via `scripts/seed-images.mjs` —
+  generates a category-colored placeholder image per product (no product
+  photography available), processes it through the actual Sharp resize/
+  WebP pipeline, and uploads through the actual Bunny Storage pipeline
+  (same code path a real admin upload uses) rather than just hot-linking
+  an external placeholder URL. Skips products that already have an image,
+  so it's safe to re-run after adding new products.
 - **All product/category-mutating Server Actions and the image upload
   route now check the caller's session role** (`requireStaffSession()` in
   `src/lib/auth/authorize.ts`) — this closes a real hole where anyone who

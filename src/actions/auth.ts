@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { verifyPassword, type Role } from "@/lib/auth/users";
-import { getUserByEmail } from "@/actions/users";
+import { getUserByIdentifier } from "@/actions/users";
 import { createSession, destroySession } from "@/lib/auth/session";
 import { phoneIdentifyLimiter, checkLimit } from "@/lib/redis/ratelimit";
 
@@ -23,7 +23,7 @@ export async function login(
   _prevState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
-  const email = String(formData.get("email") || "");
+  const identifier = String(formData.get("identifier") || "");
   const password = String(formData.get("password") || "");
 
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -32,9 +32,9 @@ export async function login(
     return { error: "Too many login attempts. Please wait a minute and try again." };
   }
 
-  const user = await getUserByEmail(email);
+  const user = await getUserByIdentifier(identifier);
   if (!user || !verifyPassword(password, user.passwordHash)) {
-    return { error: "Invalid email or password." };
+    return { error: "Invalid email/username or password." };
   }
   if (!expectedRoles.includes(user.role)) {
     return { error: "This account doesn't have access to this login." };

@@ -36,7 +36,10 @@ export function DeliveryPartnerRow({ partner }: { partner: UserRecord }) {
     <tr className="border-t border-neutral-100 dark:border-neutral-900 align-top">
       <td className="px-4 py-2">{partner.name}</td>
       <td className="px-4 py-2 text-neutral-500">{partner.phone}</td>
-      <td className="px-4 py-2 text-neutral-500">{partner.email}</td>
+      <td className="px-4 py-2 text-neutral-500">
+        <div>{partner.email}</div>
+        {partner.username && <div className="text-xs text-neutral-400">@{partner.username}</div>}
+      </td>
       <td className="px-4 py-2">
         {resetting ? (
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">

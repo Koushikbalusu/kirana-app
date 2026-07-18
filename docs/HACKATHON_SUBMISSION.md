@@ -93,10 +93,16 @@ right now.
 ## Project Published Link (Deployed/MVP Link)
 https://kirana-app-eight.vercel.app
 
-Demo logins (no signup needed):
-- Admin: `admin@kirana.app` / `kirana123`
-- Delivery Partner: `delivery@kirana.app` / `kirana123`
-- Superadmin: `super@kirana.app` / `kirana123`
+Demo logins (no signup needed) — sign in with either the email or the
+username shown, same password for all:
+- Admin/Staff (at `/login`, "Admin" tab): username `admin` (or
+  `admin@kirana.app`) / `kirana123`
+- Delivery Partner (at `/login`, "Delivery" tab): username `ramesh` (or
+  `delivery@kirana.app`) / `kirana123`
+- Superadmin (separate login at `/superadmin/login`): username
+  `superadmin` (or `super@kirana.app`) / `kirana123` — has full admin
+  capability too, reachable via the "Manage Store (Admin)" nav link once
+  signed in.
 - Customer flow: just enter any 10-digit phone number at checkout — no
   password needed.
 
