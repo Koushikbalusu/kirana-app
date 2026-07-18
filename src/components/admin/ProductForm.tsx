@@ -83,20 +83,39 @@ export function ProductForm({ existing }: { existing?: Product }) {
   const { fields, append, remove } = useFieldArray({ control, name: "variants" });
 
   const handleTranslate = async () => {
-    const nameEn = getValues("name_en");
-    if (!nameEn?.trim()) {
-      setTranslateError("Enter the English name first.");
+    const nameEn = getValues("name_en")?.trim();
+    const teScript = getValues("name_te_script")?.trim();
+    const teTransliteration = getValues("name_te_transliteration")?.trim();
+
+    // Fill from whichever field has content -- prefers English, then
+    // Telugu script, then transliteration, so typing any single one of
+    // the three and clicking this button fills the other two.
+    let field: "en" | "teScript" | "teTransliteration";
+    let value: string;
+    if (nameEn) {
+      field = "en";
+      value = nameEn;
+    } else if (teScript) {
+      field = "teScript";
+      value = teScript;
+    } else if (teTransliteration) {
+      field = "teTransliteration";
+      value = teTransliteration;
+    } else {
+      setTranslateError("Enter at least one of English name, Telugu script, or transliteration first.");
       return;
     }
+
     setTranslating(true);
     setTranslateError(null);
     try {
-      const res = await fetch(`/api/translate?text=${encodeURIComponent(nameEn)}`);
+      const res = await fetch(`/api/translate?field=${field}&text=${encodeURIComponent(value)}`);
       const data = await res.json();
       if (!res.ok) {
         setTranslateError(data.error || "Translation failed.");
         return;
       }
+      setValue("name_en", data.en, { shouldValidate: true });
       setValue("name_te_script", data.script, { shouldValidate: true });
       setValue("name_te_transliteration", data.transliteration, { shouldValidate: true });
     } catch {
@@ -188,8 +207,12 @@ export function ProductForm({ existing }: { existing?: Product }) {
                 disabled={translating}
               >
                 <Languages className="mr-1.5 h-3.5 w-3.5" />
-                {translating ? "Translating…" : "Auto-translate to Telugu"}
+                {translating ? "Translating…" : "Fill all name fields"}
               </Button>
+              <p className="mt-1 text-xs text-neutral-500">
+                Fill in just one of English / Telugu script / transliteration, then click this
+                to fill the other two.
+              </p>
               {translateError && <p className="mt-1 text-xs text-red-600">{translateError}</p>}
             </div>
             <div>

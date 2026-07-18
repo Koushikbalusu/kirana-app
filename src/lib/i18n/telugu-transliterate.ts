@@ -1,12 +1,15 @@
 /**
  * Basic Telugu-script → Latin phonetic transliteration (ITRANS-like).
- * Good enough for product-name approximations (e.g. "కందిపప్పు" → "kandi pappu"),
- * not a linguistically complete transliteration scheme.
+ * Good enough for product-name approximations (e.g. "కందిపప్పు" → "Kandi Pappu"),
+ * not a linguistically complete transliteration scheme. Vowel length
+ * (short/long) is intentionally collapsed to a single Latin letter to
+ * match how these words are commonly spelled casually, rather than
+ * doubling vowels (which reads as unnatural, e.g. "Godhuma" not "Goodhuma").
  */
 
 const INDEPENDENT_VOWELS: Record<number, string> = {
-  0x0c05: "a", 0x0c06: "aa", 0x0c07: "i", 0x0c08: "ii", 0x0c09: "u", 0x0c0a: "uu",
-  0x0c0b: "ru", 0x0c0e: "e", 0x0c0f: "ee", 0x0c10: "ai", 0x0c12: "o", 0x0c13: "oo", 0x0c14: "au",
+  0x0c05: "a", 0x0c06: "a", 0x0c07: "i", 0x0c08: "i", 0x0c09: "u", 0x0c0a: "u",
+  0x0c0b: "ru", 0x0c0e: "e", 0x0c0f: "e", 0x0c10: "ai", 0x0c12: "o", 0x0c13: "o", 0x0c14: "au",
 };
 
 const CONSONANTS: Record<number, string> = {
@@ -20,14 +23,26 @@ const CONSONANTS: Record<number, string> = {
 };
 
 const VOWEL_SIGNS: Record<number, string> = {
-  0x0c3e: "aa", 0x0c3f: "i", 0x0c40: "ii", 0x0c41: "u", 0x0c42: "uu",
-  0x0c43: "ru", 0x0c46: "e", 0x0c47: "ee", 0x0c48: "ai", 0x0c4a: "o", 0x0c4b: "oo", 0x0c4c: "au",
+  0x0c3e: "a", 0x0c3f: "i", 0x0c40: "i", 0x0c41: "u", 0x0c42: "u",
+  0x0c43: "ru", 0x0c46: "e", 0x0c47: "e", 0x0c48: "ai", 0x0c4a: "o", 0x0c4b: "o", 0x0c4c: "au",
 };
 
 const VIRAMA = 0x0c4d;
 const ANUSVARA = 0x0c02;
 const VISARGA = 0x0c03;
 const CHANDRABINDU = 0x0c00;
+
+// Anusvara (ం) nasalizes to match the place of articulation of the
+// following consonant -- e.g. before ప/బ/మ it's "m" (Pindi not Pimdi
+// would actually be wrong the other way; this fixes the reverse case:
+// before త/ద/న it's "n", not always "m").
+function anusvaraSound(nextConsonantCodepoint: number | undefined): string {
+  if (nextConsonantCodepoint === undefined) return "m";
+  if (nextConsonantCodepoint >= 0x0c15 && nextConsonantCodepoint <= 0x0c19) return "ng"; // velar
+  if (nextConsonantCodepoint >= 0x0c1a && nextConsonantCodepoint <= 0x0c28) return "n"; // palatal/retroflex/dental
+  if (nextConsonantCodepoint >= 0x0c2a && nextConsonantCodepoint <= 0x0c2e) return "m"; // labial
+  return "m";
+}
 
 export function transliterateTeluguToLatin(input: string): string {
   const chars = Array.from(input);
@@ -56,7 +71,7 @@ export function transliterateTeluguToLatin(input: string): string {
     }
 
     if (cp === ANUSVARA) {
-      out += "m";
+      out += anusvaraSound(chars[i + 1]?.codePointAt(0));
       continue;
     }
     if (cp === VISARGA) {
