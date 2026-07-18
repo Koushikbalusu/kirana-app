@@ -6,6 +6,7 @@ import { Menu, X, ShoppingCart } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { useCartStore } from "@/stores/cartStore";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function SiteHeader() {
   const { t } = useTranslation();
@@ -34,6 +35,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <LanguageSwitcher />
           <Link href="/cart" className="relative rounded-md p-2 hover:bg-neutral-100 dark:hover:bg-neutral-900">
             <ShoppingCart className="h-5 w-5" />

@@ -15,8 +15,9 @@ export async function uploadToBunny(
   if (!isBunnyConfigured) return null;
 
   const zone = process.env.BUNNY_STORAGE_ZONE!;
-  const endpoint =
-    process.env.BUNNY_STORAGE_ENDPOINT || `https://sg.storage.bunnycdn.com/${zone}`;
+  const endpoint = (
+    process.env.BUNNY_STORAGE_ENDPOINT || `https://sg.storage.bunnycdn.com/${zone}`
+  ).replace(/\/+$/, "");
   const path = `${endpoint}/${folder}/${filename}`;
 
   const res = await fetch(path, {
@@ -30,5 +31,6 @@ export async function uploadToBunny(
 
   if (!res.ok) return null;
 
-  return `${process.env.BUNNY_CDN_URL}/${folder}/${filename}`;
+  const cdnBase = process.env.BUNNY_CDN_URL!.replace(/\/+$/, "");
+  return `${cdnBase}/${folder}/${filename}`;
 }

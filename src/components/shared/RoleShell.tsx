@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logout } from "@/actions/auth";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function RoleShell({
   role,
@@ -23,6 +24,7 @@ export function RoleShell({
             <span className="hidden text-sm font-medium sm:inline">Kirana Commerce</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
+            <ThemeToggle />
             {userName && <span className="hidden text-neutral-500 sm:inline">{userName}</span>}
             <Link href="/" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
               ← Storefront
