@@ -3,6 +3,26 @@
 _Last updated: 2026-07-18_
 
 ## Done
+- **Orders/customers/addresses/deliveries are now fully DB-backed** — the
+  entire pipeline previously lived in a client-only Zustand store
+  (`src/stores/orderStore.ts`, now deleted) persisted to `localStorage`,
+  which is why stale demo orders (`ord-1001` etc.) kept reappearing and the
+  admin "Delivery" view showed assignments the real `deliveries` table never
+  had. Fixed via a new `src/actions/orders.ts` module: `placeOrder()`
+  recomputes `unitPrice`/`subtotal`/`total` server-side from the live
+  `products`/`variants` rows (never trusts client-sent prices — closes the
+  previously-flagged order-integrity gap), writes real `addresses`/`orders`/
+  `order_items` rows; `assignPartner()` writes a real `deliveries` row;
+  `updateOrderStatus()`/`markPaid()` mutate real rows and are guarded so
+  only staff or the assigned delivery partner can act on an order. All nine
+  consumer surfaces rewired: checkout, customer order history/detail, admin
+  orders/delivery/customers/dashboard-stats, delivery partner dashboard.
+  `npx tsc --noEmit` and `npm run build` both pass clean after the change.
+- Live transactional tables were reset (`scripts/reset-transactional-data.mjs`,
+  `TRUNCATE ... RESTART IDENTITY CASCADE` on `customers`, `addresses`,
+  `orders`, `order_items`, `deliveries`, `payment_proofs`) to clear out the
+  stale/fake state described above — `products`, `categories`, and `users`
+  were intentionally left untouched.
 - Full brainstorm/spec captured and structured into docs/ + CLAUDE.md +
   .claude/.
 - Next.js 15 App Router + TypeScript + Tailwind v4 scaffold created.
@@ -122,13 +142,6 @@ Zustand store; applied before hydration via an inline script in
   it will not be caught by anything else.
 
 ## Known deferred items / accepted risk (flagged, not fixed — time-boxed)
-- **Order integrity**: order placement is still entirely client-side
-  (Zustand, not a DB-backed Server Action) and trusts whatever price the
-  browser sends — nothing recomputes totals server-side against actual
-  product prices. Not exploitable for real money yet since orders aren't
-  persisted anywhere authoritative, but this must be fixed when orders
-  move to the DB (recompute price/total server-side from the live product
-  row, never trust the client's number).
 - **Maps/translate API routes have no auth** (`/api/maps/*`,
   `/api/translate`) — intentionally public since customers need them
   pre-login, but that also means anyone can hit them to burn through the
@@ -145,10 +158,6 @@ Zustand store; applied before hydration via an inline script in
   in `src/lib/constants.ts`). Multi-tenant would need a store-context
   selector plumbed through every product/category/order query, which is a
   bigger refactor than this pass covered.
-- Orders and delivery-assignment state still live in Zustand
-  (client-side, localStorage-persisted), not the DB. Schema exists in
-  `src/lib/db/schema/orders.ts`, `order-items.ts`, `deliveries.ts` for
-  whenever this gets migrated.
 - GitHub Actions CI, branch protection rules — not configured yet.
 - Meilisearch — intentionally deferred, MVP uses client-side substring
   filtering over the fetched product list (not even Postgres `pg_trgm` yet
@@ -159,13 +168,11 @@ Zustand store; applied before hydration via an inline script in
   toggle exists but translation coverage is partial).
 
 ## Next (in order)
-1. Migrate orders to real Drizzle Server Actions with server-side price
-   recomputation (closes the order-integrity gap above).
-2. Add rate limiting to `/api/maps/*` and `/api/translate`.
-3. Build a general staff-account management page (create ADMIN/STAFF
+1. Add rate limiting to `/api/maps/*` and `/api/translate`.
+2. Build a general staff-account management page (create ADMIN/STAFF
    accounts, not just delivery partners).
-4. Wire GitHub Actions CI + branch protection rules.
-5. Build the real Capacitor APK and replace the placeholder download link.
-6. Finish the i18n pass across customer + delivery UI.
+3. Wire GitHub Actions CI + branch protection rules.
+4. Build the real Capacitor APK and replace the placeholder download link.
+5. Finish the i18n pass across customer + delivery UI.
 
 **Update this file at the end of every work session.**

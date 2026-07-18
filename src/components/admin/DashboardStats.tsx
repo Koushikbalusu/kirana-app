@@ -1,11 +1,9 @@
-"use client";
-
-import { useOrderStore } from "@/stores/orderStore";
+import { listOrders } from "@/actions/orders";
 import { Card, CardBody } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils/format";
 
-export function DashboardStats({ activeProductCount }: { activeProductCount: number }) {
-  const orders = useOrderStore((s) => s.orders);
+export async function DashboardStats({ activeProductCount }: { activeProductCount: number }) {
+  const orders = await listOrders();
 
   const totalOrders = orders.length;
   const pendingDeliveries = orders.filter(

@@ -1,11 +1,13 @@
 "use client";
 
-import { useOrderStore } from "@/stores/orderStore";
+import { useEffect, useState } from "react";
+import { listOrdersForPartner, updateOrderStatus, markPaid as markPaidAction } from "@/actions/orders";
 import { DynamicMapPicker } from "@/components/shared/DynamicMapPicker";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils/format";
+import type { Order } from "@/lib/data/mock";
 
 function navigate(lat: number | undefined, lng: number | undefined, label: string | null) {
   const url =
@@ -16,10 +18,32 @@ function navigate(lat: number | undefined, lng: number | undefined, label: strin
 }
 
 export function DeliveryDashboardClient({ partnerId, partnerName }: { partnerId: string; partnerName: string }) {
-  const { orders, updateStatus, markPaid } = useOrderStore();
-  const mine = orders.filter(
-    (o) => o.partner_id === partnerId && o.status !== "DELIVERED" && o.status !== "CANCELLED"
-  );
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = () => {
+    listOrdersForPartner(partnerId).then((o) => {
+      setOrders(o);
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partnerId]);
+
+  const mine = orders.filter((o) => o.status !== "DELIVERED" && o.status !== "CANCELLED");
+
+  const onUpdateStatus = async (orderId: string, status: "IN_TRANSIT" | "DELIVERED") => {
+    await updateOrderStatus(orderId, status);
+    refresh();
+  };
+
+  const onMarkPaid = async (orderId: string) => {
+    await markPaidAction(orderId);
+    refresh();
+  };
 
   return (
     <div className="space-y-4">
@@ -44,17 +68,17 @@ export function DeliveryDashboardClient({ partnerId, partnerName }: { partnerId:
                   Navigate
                 </Button>
                 {o.status === "PLACED" && (
-                  <Button size="sm" onClick={() => updateStatus(o.id, "IN_TRANSIT")}>
+                  <Button size="sm" onClick={() => onUpdateStatus(o.id, "IN_TRANSIT")}>
                     Mark In Transit
                   </Button>
                 )}
                 {o.status === "IN_TRANSIT" && (
-                  <Button size="sm" onClick={() => updateStatus(o.id, "DELIVERED")}>
+                  <Button size="sm" onClick={() => onUpdateStatus(o.id, "DELIVERED")}>
                     Mark Delivered
                   </Button>
                 )}
                 {o.payment_status === "PENDING" && o.payment_mode === "CASH" && (
-                  <Button size="sm" variant="secondary" onClick={() => markPaid(o.id)}>
+                  <Button size="sm" variant="secondary" onClick={() => onMarkPaid(o.id)}>
                     Confirm COD Collected
                   </Button>
                 )}
@@ -62,7 +86,7 @@ export function DeliveryDashboardClient({ partnerId, partnerName }: { partnerId:
             </CardBody>
           </Card>
         ))}
-        {mine.length === 0 && <p className="text-neutral-500">No deliveries assigned right now.</p>}
+        {!loading && mine.length === 0 && <p className="text-neutral-500">No deliveries assigned right now.</p>}
       </div>
     </div>
   );

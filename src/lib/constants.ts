@@ -4,3 +4,6 @@
  * there's no store-management CRUD yet, so this stays a constant.
  */
 export const DEFAULT_STORE_ID = "b3daf19b-f618-4942-8b68-b861e806cf50";
+
+/** Flat delivery charge (paise) — admin-configurable pricing rules are a later phase. */
+export const DELIVERY_CHARGE = 2000;

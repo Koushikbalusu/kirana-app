@@ -1,11 +1,11 @@
-"use client";
-
-import { useOrderStore } from "@/stores/orderStore";
+import { listOrders } from "@/actions/orders";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 
-export default function AdminOrdersPage() {
-  const orders = useOrderStore((s) => s.orders);
+export const dynamic = "force-dynamic";
+
+export default async function AdminOrdersPage() {
+  const orders = await listOrders();
 
   return (
     <div className="space-y-4">
@@ -26,7 +26,7 @@ export default function AdminOrdersPage() {
           <tbody>
             {orders.map((o) => (
               <tr key={o.id} className="border-t border-neutral-100 dark:border-neutral-900">
-                <td className="px-4 py-2 font-medium">#{o.id}</td>
+                <td className="px-4 py-2 font-medium">#{o.id.slice(0, 8)}</td>
                 <td className="px-4 py-2">
                   <div>{o.customer_name}</div>
                   <div className="text-xs text-neutral-500">{o.customer_phone}</div>
@@ -42,6 +42,13 @@ export default function AdminOrdersPage() {
                 <td className="px-4 py-2 text-neutral-500">{formatDate(o.created_at)}</td>
               </tr>
             ))}
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-6 text-center text-neutral-500">
+                  No orders yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

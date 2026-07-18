@@ -1,20 +1,19 @@
-"use client";
-
-import { use } from "react";
 import Link from "next/link";
-import { useOrderStore } from "@/stores/orderStore";
+import { getOrder } from "@/actions/orders";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice, formatDate } from "@/lib/utils/format";
 import { LinkButton } from "@/components/ui/button";
 
-export default function OrderDetailPage({
+export const dynamic = "force-dynamic";
+
+export default async function OrderDetailPage({
   params,
 }: {
   params: Promise<{ orderId: string }>;
 }) {
-  const { orderId } = use(params);
-  const order = useOrderStore((s) => s.orders.find((o) => o.id === orderId));
+  const { orderId } = await params;
+  const order = await getOrder(orderId);
 
   if (!order) {
     return (
@@ -31,7 +30,7 @@ export default function OrderDetailPage({
     <div className="mx-auto max-w-lg space-y-4">
       <div>
         <p className="text-xs text-neutral-500">Order confirmed</p>
-        <h1 className="text-xl font-semibold">#{order.id}</h1>
+        <h1 className="text-xl font-semibold">#{order.id.slice(0, 8)}</h1>
         <p className="text-sm text-neutral-500">{formatDate(order.created_at)}</p>
       </div>
 

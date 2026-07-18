@@ -1,24 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useOrderStore } from "@/stores/orderStore";
+import { listOrders, assignPartner } from "@/actions/orders";
 import { listDeliveryPartners, type UserRecord } from "@/actions/users";
 import { DynamicDeliveryMap } from "@/components/admin/DynamicDeliveryMap";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/input";
+import type { Order } from "@/lib/data/mock";
 
 export default function AdminDeliveryPage() {
-  const { orders, assignPartner } = useOrderStore();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [partners, setPartners] = useState<UserRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = () => {
+    Promise.all([listOrders(), listDeliveryPartners()]).then(([o, p]) => {
+      setOrders(o);
+      setPartners(p);
+      setLoading(false);
+    });
+  };
 
   useEffect(() => {
-    listDeliveryPartners().then(setPartners);
+    refresh();
   }, []);
 
   const pending = orders.filter(
     (o) => o.type === "DELIVERY" && o.status !== "DELIVERED" && o.status !== "CANCELLED"
   );
+
+  const onAssign = async (orderId: string, partnerId: string) => {
+    await assignPartner(orderId, partnerId);
+    refresh();
+  };
 
   return (
     <div className="space-y-4">
@@ -37,14 +52,14 @@ export default function AdminDeliveryPage() {
           <Card key={o.id}>
             <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="font-medium">#{o.id} — {o.customer_name}</p>
+                <p className="font-medium">#{o.id.slice(0, 8)} — {o.customer_name}</p>
                 <p className="text-xs text-neutral-500">{o.address_label}</p>
               </div>
               <div className="flex items-center gap-3">
                 <Badge tone="outline">{o.status.replaceAll("_", " ")}</Badge>
                 <Select
                   value={o.partner_id ?? ""}
-                  onChange={(e) => assignPartner(o.id, e.target.value)}
+                  onChange={(e) => onAssign(o.id, e.target.value)}
                   className="w-44"
                 >
                   <option value="">Assign partner…</option>
@@ -58,10 +73,10 @@ export default function AdminDeliveryPage() {
             </CardBody>
           </Card>
         ))}
-        {pending.length === 0 && (
+        {!loading && pending.length === 0 && (
           <p className="text-neutral-500">No pending deliveries.</p>
         )}
-        {partners.length === 0 && (
+        {partners.length === 0 && !loading && (
           <p className="text-xs text-neutral-500">
             No delivery partners yet — add one under Delivery Partners first.
           </p>

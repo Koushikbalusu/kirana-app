@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/stores/cartStore";
-import { useOrderStore } from "@/stores/orderStore";
 import { formatPrice } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
@@ -11,63 +10,71 @@ import { Card, CardBody } from "@/components/ui/card";
 import { useTranslation } from "@/i18n";
 import { LocationPicker, type ConfirmedAddress } from "@/components/customer/LocationPicker";
 import { PhoneEntry } from "@/components/customer/PhoneEntry";
+import { placeOrder } from "@/actions/orders";
 import type { IdentifyResult } from "@/actions/customer";
-import type { Order, PaymentMode } from "@/lib/data/mock";
+import type { PaymentMode } from "@/lib/data/mock";
 import { CheckCircle2 } from "lucide-react";
 
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const { lines, orderType, setOrderType, subtotal, clearCart } = useCartStore();
-  const addOrder = useOrderStore((s) => s.addOrder);
 
   const [customer, setCustomer] = useState<IdentifyResult | null>(null);
-  const [name, setName] = useState("");
   const [address, setAddress] = useState<ConfirmedAddress | null>(null);
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH");
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const deliveryCharge = orderType === "DELIVERY" ? 2000 : 0;
   const total = subtotal() + deliveryCharge;
 
   const canSubmit = lines.length > 0 && customer !== null && (orderType === "PICKUP" || address !== null);
 
-  const placeOrder = () => {
-    if (!customer) return;
-    const addressLabel = address
-      ? [address.houseNumber, address.area, address.label, address.landmark].filter(Boolean).join(", ")
-      : null;
+  const submit = async () => {
+    if (!customer || customer.id.startsWith("local-")) {
+      setError("Database isn't configured yet — checkout needs a live customer record.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await placeOrder({
+        customerId: customer.id,
+        type: orderType,
+        address:
+          orderType === "DELIVERY" && address
+            ? {
+                label: address.label,
+                houseNumber: address.houseNumber,
+                area: address.area,
+                landmark: address.landmark,
+                notes: address.notes,
+                lat: address.lat,
+                lng: address.lng,
+              }
+            : undefined,
+        items: lines.map((l) => ({
+          productId: l.productId,
+          variantId: l.variantId,
+          quantity: l.quantity,
+          notes: l.notes,
+        })),
+        paymentMode,
+        customerNotes: notes || undefined,
+      });
 
-    const order: Order = {
-      id: `ord-${Date.now()}`,
-      store_id: "store-1",
-      customer_name: name || customer.name || "Guest Customer",
-      customer_phone: customer.phone,
-      type: orderType,
-      status: "PLACED",
-      address_label: orderType === "DELIVERY" ? addressLabel : null,
-      lat: orderType === "DELIVERY" ? address?.lat : undefined,
-      lng: orderType === "DELIVERY" ? address?.lng : undefined,
-      items: lines.map((l) => ({
-        product_id: l.productId,
-        variant_id: l.variantId,
-        name_en: l.nameEn,
-        quantity: l.quantity,
-        unit_price: l.unitPrice,
-        item_notes: l.notes,
-      })),
-      subtotal: subtotal(),
-      delivery_charge: deliveryCharge,
-      discount: 0,
-      total,
-      payment_mode: paymentMode,
-      payment_status: "PENDING",
-      customer_notes: notes || undefined,
-      created_at: new Date(2026, 0, 1).toISOString(),
-    };
-    addOrder(order);
-    clearCart();
-    router.push(`/orders/${order.id}`);
+      if (result.error || !result.order) {
+        setError(result.error || "Something went wrong placing your order.");
+        return;
+      }
+
+      clearCart();
+      router.push(`/orders/${result.order.id}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (lines.length === 0) {
@@ -79,12 +86,7 @@ export default function CheckoutPage() {
       <h1 className="text-xl font-semibold">{t.checkout.title}</h1>
 
       {!customer ? (
-        <PhoneEntry
-          onIdentified={(result) => {
-            setCustomer(result);
-            if (result.name) setName(result.name);
-          }}
-        />
+        <PhoneEntry onIdentified={setCustomer} />
       ) : (
         <Card>
           <CardBody className="space-y-4">
@@ -97,11 +99,6 @@ export default function CheckoutPage() {
               <button className="text-xs underline" onClick={() => setCustomer(null)}>
                 Change
               </button>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">Name (optional)</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
             </div>
 
             <div>
@@ -172,8 +169,9 @@ export default function CheckoutPage() {
         </CardBody>
       </Card>
 
-      <Button size="lg" className="w-full" disabled={!canSubmit} onClick={placeOrder}>
-        {t.checkout.place}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <Button size="lg" className="w-full" disabled={!canSubmit || submitting} onClick={submit}>
+        {submitting ? "Placing order…" : t.checkout.place}
       </Button>
     </div>
   );

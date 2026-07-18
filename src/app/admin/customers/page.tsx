@@ -1,26 +1,10 @@
-"use client";
-
-import { useOrderStore } from "@/stores/orderStore";
+import { listCustomersWithStats } from "@/actions/orders";
 import { formatPrice } from "@/lib/utils/format";
 
-export default function AdminCustomersPage() {
-  const orders = useOrderStore((s) => s.orders);
+export const dynamic = "force-dynamic";
 
-  const byPhone = new Map<string, { name: string; phone: string; orders: number; total: number }>();
-  for (const o of orders) {
-    const existing = byPhone.get(o.customer_phone);
-    if (existing) {
-      existing.orders += 1;
-      existing.total += o.total;
-    } else {
-      byPhone.set(o.customer_phone, {
-        name: o.customer_name,
-        phone: o.customer_phone,
-        orders: 1,
-        total: o.total,
-      });
-    }
-  }
+export default async function AdminCustomersPage() {
+  const customers = await listCustomersWithStats();
 
   return (
     <div className="space-y-4">
@@ -36,14 +20,21 @@ export default function AdminCustomersPage() {
             </tr>
           </thead>
           <tbody>
-            {[...byPhone.values()].map((c) => (
-              <tr key={c.phone} className="border-t border-neutral-100 dark:border-neutral-900">
+            {customers.map((c) => (
+              <tr key={c.id} className="border-t border-neutral-100 dark:border-neutral-900">
                 <td className="px-4 py-2">{c.name}</td>
                 <td className="px-4 py-2 text-neutral-500">{c.phone}</td>
-                <td className="px-4 py-2">{c.orders}</td>
-                <td className="px-4 py-2">{formatPrice(c.total)}</td>
+                <td className="px-4 py-2">{c.orderCount}</td>
+                <td className="px-4 py-2">{formatPrice(c.lifetimeValue)}</td>
               </tr>
             ))}
+            {customers.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
+                  No customers yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
