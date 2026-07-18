@@ -18,10 +18,16 @@ _Last updated: 2026-07-18_
   delivery views, delivery partner dashboard, superadmin store list).
 - Android APK download entry point present on the site (placeholder until
   the real Capacitor build is produced — see below).
+- `npm run build` and `npx tsc --noEmit` both pass clean; local dev-server
+  smoke test confirmed 200 OK on `/`, `/admin`, `/delivery`, `/superadmin`,
+  `/download-app`.
+- Git repo initialized locally with all 4 branches (`main`, `dev` [default,
+  checked out], `prod`, `prod-dev`), one commit reachable from all of them.
 
 ## Not started / deferred
-- Git repo not yet initialized with the 4-branch strategy in this session's
-  crunch build — do this next (see @.claude/GIT_WORKFLOW.md).
+- **Vercel deployment is blocked on user login** — `vercel` CLI requires an
+  interactive browser OAuth flow that can't be completed by the agent. Run
+  `vercel login` yourself, then the deploy can proceed.
 - GitHub repo creation, SSH remote, branch protection rules, CI status
   checks, GitHub secrets.
 - All 5 external platforms (Neon, Upstash, Ola Maps, Bunny, Sentry): code
