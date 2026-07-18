@@ -11,7 +11,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { useCategoryStore } from "@/stores/categoryStore";
 import { useProductStore } from "@/stores/productStore";
 import type { Product } from "@/lib/data/mock";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Languages } from "lucide-react";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 
 const variantSchema = z.object({
@@ -44,10 +44,15 @@ export function ProductForm({ existing }: { existing?: Product }) {
   const [imageUrl, setImageUrl] = useState<string | null>(existing?.image_url ?? null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(existing?.thumbnail_url ?? null);
 
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
   const {
     register,
     control,
     handleSubmit,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
@@ -76,6 +81,30 @@ export function ProductForm({ existing }: { existing?: Product }) {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "variants" });
+
+  const handleTranslate = async () => {
+    const nameEn = getValues("name_en");
+    if (!nameEn?.trim()) {
+      setTranslateError("Enter the English name first.");
+      return;
+    }
+    setTranslating(true);
+    setTranslateError(null);
+    try {
+      const res = await fetch(`/api/translate?text=${encodeURIComponent(nameEn)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setTranslateError(data.error || "Translation failed.");
+        return;
+      }
+      setValue("name_te_script", data.script, { shouldValidate: true });
+      setValue("name_te_transliteration", data.transliteration, { shouldValidate: true });
+    } catch {
+      setTranslateError("Translation failed — check your connection.");
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const onSubmit = (values: FormValues) => {
     setSubmitError(null);
@@ -149,6 +178,19 @@ export function ProductForm({ existing }: { existing?: Product }) {
                 ))}
               </Select>
               {errors.category_id && <p className="mt-1 text-xs text-red-600">{errors.category_id.message}</p>}
+            </div>
+            <div className="sm:col-span-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleTranslate}
+                disabled={translating}
+              >
+                <Languages className="mr-1.5 h-3.5 w-3.5" />
+                {translating ? "Translating…" : "Auto-translate to Telugu"}
+              </Button>
+              {translateError && <p className="mt-1 text-xs text-red-600">{translateError}</p>}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Telugu transliteration</label>
