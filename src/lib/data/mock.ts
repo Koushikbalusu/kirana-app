@@ -77,6 +77,8 @@ export interface Order {
   type: OrderType;
   status: OrderStatus;
   address_label: string | null;
+  lat?: number;
+  lng?: number;
   items: OrderItem[];
   subtotal: number;
   delivery_charge: number;
@@ -213,6 +215,8 @@ export const orders: Order[] = [
     type: "DELIVERY",
     status: "PLACED",
     address_label: "Near Hanuman Temple, Kukatpally",
+    lat: 17.4933,
+    lng: 78.4132,
     items: [
       { product_id: "prod-1", variant_id: "v-1b", name_en: "Toor Dal (1kg)", quantity: 1, unit_price: 14000 },
       { product_id: "prod-4", variant_id: null, name_en: "Parle-G Biscuit", quantity: 3, unit_price: 1000 },

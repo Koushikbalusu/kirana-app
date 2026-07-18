@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { logout } from "@/actions/auth";
 
 export function RoleShell({
   role,
   navLinks,
+  userName,
   children,
 }: {
   role: string;
   navLinks: { href: string; label: string }[];
+  userName?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -19,9 +22,19 @@ export function RoleShell({
             </span>
             <span className="hidden text-sm font-medium sm:inline">Kirana Commerce</span>
           </div>
-          <Link href="/" className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
-            ← Back to storefront
-          </Link>
+          <div className="flex items-center gap-4 text-sm">
+            {userName && <span className="hidden text-neutral-500 sm:inline">{userName}</span>}
+            <Link href="/" className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
+              ← Storefront
+            </Link>
+            {userName && (
+              <form action={logout}>
+                <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100" type="submit">
+                  Log out
+                </button>
+              </form>
+            )}
+          </div>
         </div>
         <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2 text-sm sm:px-6">
           {navLinks.map((l) => (

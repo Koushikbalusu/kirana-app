@@ -1,14 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { categories, products } from "@/lib/data/mock";
 import { ProductCard } from "@/components/customer/ProductCard";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils/cn";
 import { Search } from "lucide-react";
+import { useProductStore } from "@/stores/productStore";
+import { useCategoryStore } from "@/stores/categoryStore";
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const products = useProductStore((s) => s.products);
+  const categories = useCategoryStore((s) => s.categories);
   const [activeCategory, setActiveCategory] = useState<string | "all">("all");
   const [query, setQuery] = useState("");
 
@@ -25,7 +28,7 @@ export default function HomePage() {
           p.name_te_script.includes(query)
         );
       });
-  }, [activeCategory, query]);
+  }, [products, activeCategory, query]);
 
   return (
     <div className="space-y-6">

@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { products, categories } from "@/lib/data/mock";
+import Link from "next/link";
+import { useProductStore } from "@/stores/productStore";
+import { useCategoryStore } from "@/stores/categoryStore";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils/format";
 import { Select } from "@/components/ui/input";
 
 export default function AdminProductsPage() {
+  const products = useProductStore((s) => s.products);
+  const categories = useCategoryStore((s) => s.categories);
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("all");
 
@@ -20,7 +25,7 @@ export default function AdminProductsPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Products</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-40">
             <option value="all">All categories</option>
             {categories.map((c) => (
@@ -35,6 +40,9 @@ export default function AdminProductsPage() {
             <option value="OUT_OF_STOCK">Out of Stock</option>
             <option value="HIDDEN">Hidden</option>
           </Select>
+          <Link href="/admin/products/new">
+            <Button size="sm">New Product</Button>
+          </Link>
         </div>
       </div>
 
@@ -53,8 +61,10 @@ export default function AdminProductsPage() {
             {rows.map((p) => (
               <tr key={p.id} className="border-t border-neutral-100 dark:border-neutral-900">
                 <td className="px-4 py-2">
-                  <div>{p.name_en}</div>
-                  <div className="text-xs text-neutral-500">{p.name_te_script}</div>
+                  <Link href={`/admin/products/${p.id}`} className="hover:underline">
+                    <div>{p.name_en}</div>
+                    <div className="text-xs text-neutral-500">{p.name_te_script}</div>
+                  </Link>
                 </td>
                 <td className="px-4 py-2 text-neutral-500">
                   {categories.find((c) => c.id === p.category_id)?.name_en}

@@ -1,13 +1,15 @@
 "use client";
 
 import { useOrderStore } from "@/stores/orderStore";
-import { deliveryPartners } from "@/lib/data/mock";
+import { usePartnerStore } from "@/stores/partnerStore";
+import { DynamicDeliveryMap } from "@/components/admin/DynamicDeliveryMap";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/input";
 
 export default function AdminDeliveryPage() {
   const { orders, assignPartner } = useOrderStore();
+  const partners = usePartnerStore((s) => s.partners);
   const pending = orders.filter(
     (o) => o.type === "DELIVERY" && o.status !== "DELIVERED" && o.status !== "CANCELLED"
   );
@@ -17,12 +19,12 @@ export default function AdminDeliveryPage() {
       <div>
         <h1 className="text-xl font-semibold">Delivery Management</h1>
         <p className="text-sm text-neutral-500">
-          Map view (Leaflet + OpenStreetMap, pin-per-address) is wired once
-          each order carries real lat/lng from the Location Picker — see
-          docs/ARCHITECTURE.md. Meanwhile, pending deliveries are listed here
-          for assignment.
+          Pending delivery addresses plotted with Leaflet + OpenStreetMap.
+          Assign a partner below each pin.
         </p>
       </div>
+
+      <DynamicDeliveryMap orders={pending} />
 
       <div className="space-y-3">
         {pending.map((o) => (
@@ -40,7 +42,7 @@ export default function AdminDeliveryPage() {
                   className="w-44"
                 >
                   <option value="">Assign partner…</option>
-                  {deliveryPartners.map((p) => (
+                  {partners.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                     </option>

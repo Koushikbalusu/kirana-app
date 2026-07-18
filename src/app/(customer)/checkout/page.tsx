@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { Card, CardBody } from "@/components/ui/card";
 import { useTranslation } from "@/i18n";
+import { LocationPicker, type ConfirmedAddress } from "@/components/customer/LocationPicker";
 import type { Order, PaymentMode } from "@/lib/data/mock";
 
 export default function CheckoutPage() {
@@ -19,24 +20,30 @@ export default function CheckoutPage() {
 
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState<ConfirmedAddress | null>(null);
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH");
   const [notes, setNotes] = useState("");
 
   const deliveryCharge = orderType === "DELIVERY" ? 2000 : 0;
   const total = subtotal() + deliveryCharge;
 
-  const canSubmit = lines.length > 0 && phone.trim().length >= 10 && (orderType === "PICKUP" || address.trim().length > 0);
+  const canSubmit = lines.length > 0 && phone.trim().length >= 10 && (orderType === "PICKUP" || address !== null);
 
   const placeOrder = () => {
+    const addressLabel = address
+      ? [address.houseNumber, address.area, address.label, address.landmark].filter(Boolean).join(", ")
+      : null;
+
     const order: Order = {
       id: `ord-${Date.now()}`,
       store_id: "store-1",
       customer_name: name || "Guest Customer",
       customer_phone: phone,
       type: orderType,
-      status: orderType === "DELIVERY" ? "PLACED" : "PLACED",
-      address_label: orderType === "DELIVERY" ? address : null,
+      status: "PLACED",
+      address_label: orderType === "DELIVERY" ? addressLabel : null,
+      lat: orderType === "DELIVERY" ? address?.lat : undefined,
+      lng: orderType === "DELIVERY" ? address?.lng : undefined,
       items: lines.map((l) => ({
         product_id: l.productId,
         variant_id: l.variantId,
@@ -97,13 +104,18 @@ export default function CheckoutPage() {
           </div>
 
           {orderType === "DELIVERY" && (
-            <div>
-              <label className="mb-1 block text-sm font-medium">{t.checkout.address}</label>
-              <Input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="House no, area, landmark (GPS/map picker comes with Ola Maps integration)"
-              />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">{t.checkout.address}</label>
+              {address ? (
+                <div className="flex items-center justify-between rounded-md border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800">
+                  <span>{[address.houseNumber, address.area, address.label].filter(Boolean).join(", ")}</span>
+                  <button className="text-xs underline" onClick={() => setAddress(null)}>
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <LocationPicker onConfirm={setAddress} />
+              )}
             </div>
           )}
 

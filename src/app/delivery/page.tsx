@@ -1,28 +1,35 @@
 "use client";
 
 import { useOrderStore } from "@/stores/orderStore";
-import { deliveryPartners } from "@/lib/data/mock";
+import { usePartnerStore } from "@/stores/partnerStore";
+import { DynamicMapPicker } from "@/components/shared/DynamicMapPicker";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils/format";
 
-const CURRENT_PARTNER_ID = deliveryPartners[0].id;
+// Demo delivery login (delivery@kirana.app) corresponds to this seed partner.
+const CURRENT_PARTNER_ID = "dp-1";
+
+function navigate(lat: number | undefined, lng: number | undefined, label: string | null) {
+  const url =
+    lat != null && lng != null
+      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label ?? "kirana store")}`;
+  window.open(url, "_blank");
+}
 
 export default function DeliveryDashboard() {
   const { orders, updateStatus, markPaid } = useOrderStore();
+  const partners = usePartnerStore((s) => s.partners);
+  const currentPartner = partners.find((p) => p.id === CURRENT_PARTNER_ID);
   const mine = orders.filter(
     (o) => o.partner_id === CURRENT_PARTNER_ID && o.status !== "DELIVERED" && o.status !== "CANCELLED"
   );
 
-  const navigate = (label: string | null) => {
-    const query = encodeURIComponent(label ?? "kirana store");
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
-  };
-
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">My Deliveries — {deliveryPartners[0].name}</h1>
+      <h1 className="text-xl font-semibold">My Deliveries — {currentPartner?.name ?? "Partner"}</h1>
       <div className="space-y-3">
         {mine.map((o) => (
           <Card key={o.id}>
@@ -34,9 +41,12 @@ export default function DeliveryDashboard() {
                 </div>
                 <Badge tone="outline">{o.status.replaceAll("_", " ")}</Badge>
               </div>
+              {o.lat != null && o.lng != null && (
+                <DynamicMapPicker lat={o.lat} lng={o.lng} readOnly height={160} />
+              )}
               <p className="text-sm">Total: {formatPrice(o.total)} · {o.payment_mode} ({o.payment_status})</p>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => navigate(o.address_label)}>
+                <Button size="sm" variant="outline" onClick={() => navigate(o.lat, o.lng, o.address_label)}>
                   Navigate
                 </Button>
                 {o.status === "PLACED" && (

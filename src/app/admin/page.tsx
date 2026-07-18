@@ -1,12 +1,13 @@
 "use client";
 
 import { useOrderStore } from "@/stores/orderStore";
-import { products } from "@/lib/data/mock";
+import { useProductStore } from "@/stores/productStore";
 import { Card, CardBody } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils/format";
 
 export default function AdminDashboard() {
   const orders = useOrderStore((s) => s.orders);
+  const products = useProductStore((s) => s.products);
 
   const totalOrders = orders.length;
   const pendingDeliveries = orders.filter(
