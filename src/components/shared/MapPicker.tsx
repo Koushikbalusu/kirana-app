@@ -1,8 +1,8 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useMemo } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { useEffect, useMemo, useRef } from "react";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
 const pinIcon = L.divIcon({
@@ -46,6 +46,27 @@ function DraggableMarker({
   );
 }
 
+/**
+ * react-leaflet's <MapContainer center> only applies on initial mount --
+ * it does not recenter the map when the prop changes afterward. Without
+ * this, selecting a search suggestion moves the marker's position but the
+ * viewport never follows it, so the pin can end up off-screen.
+ */
+function RecenterOnChange({ position }: { position: { lat: number; lng: number } }) {
+  const map = useMap();
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    map.flyTo(position, map.getZoom(), { duration: 0.5 });
+  }, [position, map]);
+
+  return null;
+}
+
 export function MapPicker({
   lat,
   lng,
@@ -62,13 +83,14 @@ export function MapPicker({
   const position = useMemo(() => ({ lat, lng }), [lat, lng]);
 
   return (
-    <div style={{ height }} className="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
+    <div style={{ height }} className="relative z-0 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
       <MapContainer center={position} zoom={15} style={{ height: "100%", width: "100%" }} scrollWheelZoom={!readOnly}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; OpenStreetMap contributors'
         />
         <DraggableMarker position={position} onMove={onChange} readOnly={readOnly} />
+        <RecenterOnChange position={position} />
       </MapContainer>
     </div>
   );

@@ -120,7 +120,7 @@ export function LocationPicker({ onConfirm }: { onConfirm: (address: ConfirmedAd
           </Button>
         </div>
 
-        <div className="relative">
+        <div className="relative z-20">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input
             value={query}
@@ -129,7 +129,7 @@ export function LocationPicker({ onConfirm }: { onConfirm: (address: ConfirmedAd
             className="pl-9"
           />
           {suggestions.length > 0 && (
-            <ul className="absolute z-10 mt-1 w-full rounded-md border border-neutral-200 bg-white text-sm shadow-lg dark:border-neutral-800 dark:bg-neutral-950">
+            <ul className="absolute z-20 mt-1 w-full rounded-md border border-neutral-200 bg-white text-sm shadow-lg dark:border-neutral-800 dark:bg-neutral-950">
               {suggestions.map((s) => (
                 <li key={s.placeId}>
                   <button

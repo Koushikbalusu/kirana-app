@@ -18,7 +18,7 @@ export function DeliveryMap({ orders }: { orders: Order[] }) {
   const withCoords = orders.filter((o) => o.lat != null && o.lng != null);
 
   return (
-    <div className="h-[320px] overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
+    <div className="relative z-0 h-[320px] overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
       <MapContainer center={HYDERABAD_CENTER} zoom={11} style={{ height: "100%", width: "100%" }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
