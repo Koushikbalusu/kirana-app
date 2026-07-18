@@ -1,7 +1,8 @@
 "use client";
 
 import { useCartStore } from "@/stores/cartStore";
-import { formatPrice } from "@/lib/utils/format";
+import { formatPrice, formatQty } from "@/lib/utils/format";
+import { clampLooseQuantity } from "@/lib/utils/quantity";
 import { LinkButton, Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { useTranslation } from "@/i18n";
@@ -33,13 +34,26 @@ export default function CartPage() {
               <div>
                 <p className="font-medium">{l.nameEn}</p>
                 <p className="text-sm text-neutral-500">{formatPrice(l.unitPrice)} / {l.unit}</p>
+                <p className="text-xs text-neutral-400">
+                  Min {formatQty(l.minQty, l.unit)}, steps of {formatQty(l.stepSize, l.unit)}
+                  {l.maxQty != null && `, max ${formatQty(l.maxQty, l.unit)}`}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <input
                   type="number"
                   value={l.quantity}
-                  min={0}
+                  min={l.minQty}
+                  max={l.maxQty ?? undefined}
+                  step={l.stepSize}
                   onChange={(e) => updateQuantity(l.productId, l.variantId, Number(e.target.value))}
+                  onBlur={(e) =>
+                    updateQuantity(
+                      l.productId,
+                      l.variantId,
+                      clampLooseQuantity(Number(e.target.value), { min: l.minQty, step: l.stepSize, max: l.maxQty })
+                    )
+                  }
                   className="w-20 rounded-md border border-neutral-300 px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                 />
                 <span className="w-24 text-right font-medium">

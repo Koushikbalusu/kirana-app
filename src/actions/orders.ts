@@ -17,6 +17,7 @@ import { DEFAULT_STORE_ID, DELIVERY_CHARGE } from "@/lib/constants";
 import { requireStaffSession } from "@/lib/auth/authorize";
 import { getSession } from "@/lib/auth/session";
 import { orderPlacementLimiter, checkLimit } from "@/lib/redis/ratelimit";
+import { isValidLooseQuantity, isValidPackCount } from "@/lib/utils/quantity";
 import type {
   Order,
   OrderItem,
@@ -91,6 +92,7 @@ async function fetchOrdersByFilter(whereClause: ReturnType<typeof eq> | ReturnTy
       unitPrice: orderItemsTable.unitPrice,
       itemNotes: orderItemsTable.itemNotes,
       productName: productsTable.nameEn,
+      productUnit: productsTable.unit,
       variantLabel: variantsTable.label,
     })
     .from(orderItemsTable)
@@ -116,6 +118,7 @@ async function fetchOrdersByFilter(whereClause: ReturnType<typeof eq> | ReturnTy
         variant_id: i.variantId,
         name_en: i.variantLabel ? `${i.productName} (${i.variantLabel})` : i.productName ?? "Unknown product",
         quantity: i.quantity,
+        unit: i.variantLabel ? "pack" : i.productUnit ?? "",
         unit_price: i.unitPrice,
         item_notes: i.itemNotes ?? undefined,
       }));
@@ -177,7 +180,23 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   for (const item of input.items) {
     const product = productById.get(item.productId);
     if (!product) return { error: "One of the items in your cart no longer exists." };
+
     const variant = item.variantId ? variantById.get(item.variantId) : undefined;
+    if (item.variantId && (!variant || variant.productId !== item.productId)) {
+      return { error: `"${product.nameEn}": selected variant no longer exists.` };
+    }
+
+    // A variant (or any PACKAGED product bought without one) is always a
+    // discrete pack count; only a LOOSE product bought with no variant
+    // selected uses its own min/step/max continuous-quantity rule.
+    const isLooseUnitPurchase = product.type === "LOOSE" && !variant;
+    const quantityOk = isLooseUnitPurchase
+      ? isValidLooseQuantity(item.quantity, { min: product.minQty, step: product.stepSize, max: product.maxQty })
+      : isValidPackCount(item.quantity);
+    if (!quantityOk) {
+      return { error: `"${product.nameEn}": invalid quantity.` };
+    }
+
     const unitPrice = variant ? variant.price : product.basePrice;
     subtotal += unitPrice * item.quantity;
     resolvedItems.push({ productId: item.productId, variantId: item.variantId, quantity: item.quantity, unitPrice, notes: item.notes });

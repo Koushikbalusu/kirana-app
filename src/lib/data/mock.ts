@@ -69,6 +69,7 @@ export interface OrderItem {
   variant_id: string | null;
   name_en: string;
   quantity: number;
+  unit: string;
   unit_price: number;
   item_notes?: string;
 }

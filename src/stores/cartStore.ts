@@ -10,6 +10,10 @@ export interface CartLine {
   unitPrice: number; // paise
   quantity: number;
   unit: string;
+  /** Quantity bounds -- pack lines (variantId set, or non-loose products) use {min:1, step:1, max:null}. */
+  minQty: number;
+  stepSize: number;
+  maxQty: number | null;
   notes?: string;
 }
 

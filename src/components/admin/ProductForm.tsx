@@ -27,6 +27,10 @@ const schema = z.object({
   unit: z.string().min(1, "Required"),
   min_qty: z.coerce.number().min(0.01),
   step_size: z.coerce.number().min(0.01),
+  max_qty: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.coerce.number().min(0.01).optional()
+  ),
   base_price: z.coerce.number().min(1, "Required"),
   status: z.enum(["IN_STOCK", "OUT_OF_STOCK", "HIDDEN"]),
   variants: z.array(variantSchema),
@@ -64,6 +68,7 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
           unit: existing.unit,
           min_qty: existing.min_qty,
           step_size: existing.step_size,
+          max_qty: existing.max_qty ?? undefined,
           base_price: existing.base_price,
           status: existing.status,
           variants: existing.variants.map((v) => ({ label: v.label, price: v.price })),
@@ -135,6 +140,7 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
       ...values,
       name_te_transliteration: values.name_te_transliteration ?? "",
       name_te_script: values.name_te_script ?? "",
+      max_qty: values.max_qty ?? null,
       image_url: imageUrl,
       thumbnail_url: thumbnailUrl,
       variants: values.variants.map((v) => ({ label: v.label, price: v.price })),
@@ -237,6 +243,11 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
             <div>
               <label className="mb-1 block text-sm font-medium">Step size</label>
               <Input type="number" step="0.01" {...register("step_size")} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Max quantity (optional)</label>
+              <Input type="number" step="0.01" {...register("max_qty")} placeholder="No limit" />
+              {errors.max_qty && <p className="mt-1 text-xs text-red-600">{errors.max_qty.message}</p>}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Base price (paise)</label>

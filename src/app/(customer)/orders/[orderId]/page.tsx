@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getOrder } from "@/actions/orders";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatPrice, formatDate } from "@/lib/utils/format";
+import { formatPrice, formatDate, formatQty } from "@/lib/utils/format";
 import { LinkButton } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +43,7 @@ export default async function OrderDetailPage({
           {order.items.map((item, i) => (
             <div key={i} className="flex justify-between">
               <span>
-                {item.name_en} × {item.quantity}
+                {item.name_en} × {formatQty(item.quantity, item.unit)}
               </span>
               <span>{formatPrice(item.unit_price * item.quantity)}</span>
             </div>

@@ -19,6 +19,23 @@ function toVariant(row: VariantRow): Variant {
   };
 }
 
+export interface ProductInput {
+  name_en: string;
+  name_te_transliteration: string;
+  name_te_script: string;
+  category_id: string;
+  type: ProductType;
+  unit: string;
+  min_qty: number;
+  step_size: number;
+  max_qty: number | null;
+  base_price: number;
+  status: ProductStatus;
+  image_url: string | null;
+  thumbnail_url: string | null;
+  variants: { label: string; price: number }[];
+}
+
 function toProduct(row: ProductRow, variantRows: VariantRow[]): Product {
   return {
     id: row.id,
@@ -63,22 +80,6 @@ export async function getProduct(id: string): Promise<Product | null> {
   return toProduct(rows[0], variantRows);
 }
 
-export interface ProductInput {
-  name_en: string;
-  name_te_transliteration: string;
-  name_te_script: string;
-  category_id: string;
-  type: ProductType;
-  unit: string;
-  min_qty: number;
-  step_size: number;
-  base_price: number;
-  status: ProductStatus;
-  image_url: string | null;
-  thumbnail_url: string | null;
-  variants: { label: string; price: number }[];
-}
-
 export async function createProduct(input: ProductInput): Promise<Product | null> {
   await requireStaffSession();
   if (!db) return null;
@@ -94,6 +95,7 @@ export async function createProduct(input: ProductInput): Promise<Product | null
       unit: input.unit,
       minQty: input.min_qty,
       stepSize: input.step_size,
+      maxQty: input.max_qty,
       basePrice: input.base_price,
       status: input.status,
       imageUrl: input.image_url,
@@ -128,6 +130,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Pr
       unit: input.unit,
       minQty: input.min_qty,
       stepSize: input.step_size,
+      maxQty: input.max_qty,
       basePrice: input.base_price,
       status: input.status,
       imageUrl: input.image_url,

@@ -13,6 +13,7 @@ import { PhoneEntry } from "@/components/customer/PhoneEntry";
 import { placeOrder } from "@/actions/orders";
 import type { IdentifyResult } from "@/actions/customer";
 import type { PaymentMode } from "@/lib/data/mock";
+import { DELIVERY_CHARGE } from "@/lib/constants";
 import { CheckCircle2 } from "lucide-react";
 
 export default function CheckoutPage() {
@@ -27,7 +28,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const deliveryCharge = orderType === "DELIVERY" ? 2000 : 0;
+  const deliveryCharge = orderType === "DELIVERY" ? DELIVERY_CHARGE : 0;
   const total = subtotal() + deliveryCharge;
 
   const canSubmit = lines.length > 0 && customer !== null && (orderType === "PICKUP" || address !== null);
