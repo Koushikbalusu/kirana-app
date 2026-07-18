@@ -257,6 +257,8 @@ export const orders: Order[] = [
     type: "DELIVERY",
     status: "IN_TRANSIT",
     address_label: "Opposite water tank, Miyapur",
+    lat: 17.4966,
+    lng: 78.3562,
     items: [{ product_id: "prod-3", variant_id: "v-3a", name_en: "Sunflower Oil (1L)", quantity: 2, unit_price: 18500 }],
     subtotal: 37000,
     delivery_charge: 2000,
