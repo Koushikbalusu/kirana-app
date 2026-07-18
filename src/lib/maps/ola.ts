@@ -5,8 +5,18 @@ export interface PlaceSuggestion {
 
 const OLA_BASE = "https://api.olamaps.io";
 
+// Ola Maps (Krutrim) whitelists API keys by domain, checked via the Origin
+// header. Our calls happen server-side (no browser Origin), so we send a
+// fixed one matching whatever domain is whitelisted on the credential —
+// see docs/PLATFORM_SETUP.md. Override via env if the production domain changes.
+const OLA_ORIGIN = process.env.OLA_MAPS_ALLOWED_ORIGIN || "https://kirana-app-eight.vercel.app";
+
 function getKey(): string | null {
   return process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY || process.env.OLA_MAPS_API_KEY || null;
+}
+
+async function olaFetch(path: string): Promise<Response> {
+  return fetch(`${OLA_BASE}${path}`, { headers: { Origin: OLA_ORIGIN, Referer: OLA_ORIGIN } });
 }
 
 export const isOlaMapsConfigured = () => Boolean(getKey());
@@ -16,9 +26,7 @@ export async function autocompleteAddress(input: string): Promise<PlaceSuggestio
   const key = getKey();
   if (!key || !input.trim()) return [];
   try {
-    const res = await fetch(
-      `${OLA_BASE}/places/v1/autocomplete?input=${encodeURIComponent(input)}&api_key=${key}`
-    );
+    const res = await olaFetch(`/places/v1/autocomplete?input=${encodeURIComponent(input)}&api_key=${key}`);
     if (!res.ok) return [];
     const data = await res.json();
     return (data.predictions ?? []).map((p: { description: string; place_id: string }) => ({
@@ -34,7 +42,7 @@ export async function getPlaceCoordinates(placeId: string): Promise<{ lat: numbe
   const key = getKey();
   if (!key) return null;
   try {
-    const res = await fetch(`${OLA_BASE}/places/v1/details?place_id=${placeId}&api_key=${key}`);
+    const res = await olaFetch(`/places/v1/details?place_id=${placeId}&api_key=${key}`);
     if (!res.ok) return null;
     const data = await res.json();
     const loc = data.result?.geometry?.location;
@@ -49,9 +57,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
   const key = getKey();
   if (!key) return null;
   try {
-    const res = await fetch(
-      `${OLA_BASE}/places/v1/reverse-geocode?latlng=${lat},${lng}&api_key=${key}`
-    );
+    const res = await olaFetch(`/places/v1/reverse-geocode?latlng=${lat},${lng}&api_key=${key}`);
     if (!res.ok) return null;
     const data = await res.json();
     return data.results?.[0]?.formatted_address ?? null;
