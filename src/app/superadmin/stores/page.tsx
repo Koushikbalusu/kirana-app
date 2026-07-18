@@ -1,7 +1,9 @@
-import { stores } from "@/lib/data/mock";
+import { listStores } from "@/actions/stores";
 import { Badge } from "@/components/ui/badge";
 
-export default function SuperadminStoresPage() {
+export default async function SuperadminStoresPage() {
+  const stores = await listStores();
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Stores</h1>
@@ -24,6 +26,13 @@ export default function SuperadminStoresPage() {
                 </td>
               </tr>
             ))}
+            {stores.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-6 text-center text-neutral-500">
+                  No stores yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

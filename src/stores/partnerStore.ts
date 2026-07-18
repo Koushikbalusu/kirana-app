@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { deliveryPartners as seedPartners, type DeliveryPartner } from "@/lib/data/mock";
+import type { DeliveryPartner } from "@/lib/data/mock";
 
 interface PartnerState {
   partners: DeliveryPartner[];
@@ -13,7 +13,7 @@ interface PartnerState {
 export const usePartnerStore = create<PartnerState>()(
   persist(
     (set) => ({
-      partners: seedPartners,
+      partners: [],
       addPartner: (partner) => set((state) => ({ partners: [...state.partners, partner] })),
       removePartner: (id) =>
         set((state) => ({ partners: state.partners.filter((p) => p.id !== id) })),

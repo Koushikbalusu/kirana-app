@@ -8,9 +8,8 @@ import { z } from "zod";
 import { Input, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
-import { useCategoryStore } from "@/stores/categoryStore";
-import { useProductStore } from "@/stores/productStore";
-import type { Product } from "@/lib/data/mock";
+import { createProduct, updateProduct as updateProductAction } from "@/actions/products";
+import type { Product, Category } from "@/lib/data/mock";
 import { Trash2, Plus, Languages } from "lucide-react";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 
@@ -36,10 +35,8 @@ const schema = z.object({
 type FormInput = z.input<typeof schema>;
 type FormValues = z.output<typeof schema>;
 
-export function ProductForm({ existing }: { existing?: Product }) {
+export function ProductForm({ existing, categories }: { existing?: Product; categories: Category[] }) {
   const router = useRouter();
-  const categories = useCategoryStore((s) => s.categories);
-  const { addProduct, updateProduct } = useProductStore();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(existing?.image_url ?? null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(existing?.thumbnail_url ?? null);
@@ -125,7 +122,7 @@ export function ProductForm({ existing }: { existing?: Product }) {
     }
   };
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     setSubmitError(null);
     const common = {
       ...values,
@@ -133,34 +130,24 @@ export function ProductForm({ existing }: { existing?: Product }) {
       name_te_script: values.name_te_script ?? "",
       image_url: imageUrl,
       thumbnail_url: thumbnailUrl,
+      variants: values.variants.map((v) => ({ label: v.label, price: v.price })),
     };
     try {
       if (existing) {
-        updateProduct(existing.id, {
-          ...common,
-          max_qty: existing.max_qty,
-          variants: values.variants.map((v, i) => ({
-            id: existing.variants[i]?.id ?? `v-${Date.now()}-${i}`,
-            label: v.label,
-            price: v.price,
-            stock_status: existing.variants[i]?.stock_status ?? "IN_STOCK",
-          })),
-        });
-        router.push("/admin/products");
+        const result = await updateProductAction(existing.id, common);
+        if (!result) {
+          setSubmitError("Database isn't configured yet — can't save products.");
+          return;
+        }
       } else {
-        addProduct({
-          id: `prod-${Date.now()}`,
-          ...common,
-          max_qty: null,
-          variants: values.variants.map((v, i) => ({
-            id: `v-${Date.now()}-${i}`,
-            label: v.label,
-            price: v.price,
-            stock_status: "IN_STOCK",
-          })),
-        });
-        router.push("/admin/products");
+        const result = await createProduct(common);
+        if (!result) {
+          setSubmitError("Database isn't configured yet — can't save products.");
+          return;
+        }
       }
+      router.push("/admin/products");
+      router.refresh();
     } catch {
       setSubmitError("Something went wrong saving the product.");
     }

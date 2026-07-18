@@ -8,9 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils/format";
 
-// Demo delivery login (delivery@kirana.app) corresponds to this seed partner.
-const CURRENT_PARTNER_ID = "dp-1";
-
 function navigate(lat: number | undefined, lng: number | undefined, label: string | null) {
   const url =
     lat != null && lng != null
@@ -22,9 +19,11 @@ function navigate(lat: number | undefined, lng: number | undefined, label: strin
 export default function DeliveryDashboard() {
   const { orders, updateStatus, markPaid } = useOrderStore();
   const partners = usePartnerStore((s) => s.partners);
-  const currentPartner = partners.find((p) => p.id === CURRENT_PARTNER_ID);
+  // Single-delivery-person demo: no per-account partner linkage exists yet,
+  // so the first partner on record is treated as "me".
+  const currentPartner = partners[0];
   const mine = orders.filter(
-    (o) => o.partner_id === CURRENT_PARTNER_ID && o.status !== "DELIVERED" && o.status !== "CANCELLED"
+    (o) => o.partner_id === currentPartner?.id && o.status !== "DELIVERED" && o.status !== "CANCELLED"
   );
 
   return (

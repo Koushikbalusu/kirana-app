@@ -1,10 +1,12 @@
 import { ProductForm } from "@/components/admin/ProductForm";
+import { listCategories } from "@/actions/categories";
 
-export default function NewProductPage() {
+export default async function NewProductPage() {
+  const categories = await listCategories();
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">New Product</h1>
-      <ProductForm />
+      <ProductForm categories={categories} />
     </div>
   );
 }
