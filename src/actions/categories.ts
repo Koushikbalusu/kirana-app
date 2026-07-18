@@ -4,6 +4,7 @@ import { eq, asc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { categories as categoriesTable } from "@/lib/db/schema";
 import { DEFAULT_STORE_ID } from "@/lib/constants";
+import { requireStaffSession } from "@/lib/auth/authorize";
 import type { Category } from "@/lib/data/mock";
 
 function toCategory(row: typeof categoriesTable.$inferSelect): Category {
@@ -31,6 +32,7 @@ export async function createCategory(input: {
   name_te_transliteration: string;
   name_te_script: string;
 }): Promise<Category | null> {
+  await requireStaffSession();
   if (!db) return null;
   const inserted = await db
     .insert(categoriesTable)

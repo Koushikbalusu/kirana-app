@@ -1,7 +1,10 @@
 import { RoleShell } from "@/components/shared/RoleShell";
 import { getSession } from "@/lib/auth/session";
 
-const navLinks = [{ href: "/delivery", label: "My Deliveries" }];
+const navLinks = [
+  { href: "/delivery", label: "My Deliveries" },
+  { href: "/delivery/settings", label: "Settings" },
+];
 
 export default async function DeliveryLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();

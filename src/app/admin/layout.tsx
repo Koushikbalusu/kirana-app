@@ -9,12 +9,14 @@ const navLinks = [
   { href: "/admin/delivery", label: "Delivery" },
   { href: "/admin/delivery/partners", label: "Delivery Partners" },
   { href: "/admin/customers", label: "Customers" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
+  const roleLabel = session?.role === "SUPERADMIN" ? "Superadmin" : "Admin";
   return (
-    <RoleShell role="Admin" navLinks={navLinks} userName={session?.name}>
+    <RoleShell role={roleLabel} navLinks={navLinks} userName={session?.name}>
       {children}
     </RoleShell>
   );

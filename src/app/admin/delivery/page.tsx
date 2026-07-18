@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useOrderStore } from "@/stores/orderStore";
-import { usePartnerStore } from "@/stores/partnerStore";
+import { listDeliveryPartners, type UserRecord } from "@/actions/users";
 import { DynamicDeliveryMap } from "@/components/admin/DynamicDeliveryMap";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,12 @@ import { Select } from "@/components/ui/input";
 
 export default function AdminDeliveryPage() {
   const { orders, assignPartner } = useOrderStore();
-  const partners = usePartnerStore((s) => s.partners);
+  const [partners, setPartners] = useState<UserRecord[]>([]);
+
+  useEffect(() => {
+    listDeliveryPartners().then(setPartners);
+  }, []);
+
   const pending = orders.filter(
     (o) => o.type === "DELIVERY" && o.status !== "DELIVERED" && o.status !== "CANCELLED"
   );
@@ -54,6 +60,11 @@ export default function AdminDeliveryPage() {
         ))}
         {pending.length === 0 && (
           <p className="text-neutral-500">No pending deliveries.</p>
+        )}
+        {partners.length === 0 && (
+          <p className="text-xs text-neutral-500">
+            No delivery partners yet — add one under Delivery Partners first.
+          </p>
         )}
       </div>
     </div>

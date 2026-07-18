@@ -3,8 +3,15 @@ import { headers } from "next/headers";
 import { processProductImage, generateThumbnail } from "@/lib/storage/sharp";
 import { uploadToBunny, isBunnyConfigured } from "@/lib/storage/bunny";
 import { uploadLimiter, checkLimit } from "@/lib/redis/ratelimit";
+import { requireStaffSession } from "@/lib/auth/authorize";
 
 export async function POST(request: Request) {
+  try {
+    await requireStaffSession();
+  } catch {
+    return NextResponse.json({ error: "Not authorized." }, { status: 401 });
+  }
+
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   const { allowed } = await checkLimit(uploadLimiter, `upload:${ip}`);
   if (!allowed) {

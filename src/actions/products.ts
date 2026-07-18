@@ -4,6 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { products as productsTable, variants as variantsTable } from "@/lib/db/schema";
 import { DEFAULT_STORE_ID } from "@/lib/constants";
+import { requireStaffSession } from "@/lib/auth/authorize";
 import type { Product, Variant, ProductType, ProductStatus } from "@/lib/data/mock";
 
 type ProductRow = typeof productsTable.$inferSelect;
@@ -79,6 +80,7 @@ export interface ProductInput {
 }
 
 export async function createProduct(input: ProductInput): Promise<Product | null> {
+  await requireStaffSession();
   if (!db) return null;
   const inserted = await db
     .insert(productsTable)
@@ -113,6 +115,7 @@ export async function createProduct(input: ProductInput): Promise<Product | null
 }
 
 export async function updateProduct(id: string, input: ProductInput): Promise<Product | null> {
+  await requireStaffSession();
   if (!db) return null;
   const updated = await db
     .update(productsTable)

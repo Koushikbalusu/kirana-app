@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { transliterateTeluguToLatin } from "@/lib/i18n/telugu-transliterate";
+import { transliterateLatinToTelugu } from "@/lib/i18n/latin-to-telugu";
 import { lookupGlossary } from "@/lib/i18n/grocery-glossary";
 
 type Field = "en" | "teScript" | "teTransliteration";
@@ -65,13 +66,16 @@ export async function GET(request: Request) {
   // field === "teTransliteration": generic MT cannot reliably reconstruct
   // Telugu script or English from romanized text (verified -- Google's
   // free endpoint just echoes Latin input back unchanged for `sl=te`).
-  // Only the curated glossary can resolve this direction; anything else
-  // needs the English or Telugu-script field filled instead.
-  return NextResponse.json(
-    {
-      error:
-        "Can't reliably reverse-translate from Latin/transliteration text for unlisted items — try filling in the English name or Telugu script instead.",
-    },
-    { status: 422 }
-  );
+  // Best-effort fallback: reconstruct an approximate Telugu script via a
+  // phonetic Latin->Telugu mapping, then translate that to English. Flagged
+  // as "approximate" so the UI can tell the admin to double-check it,
+  // rather than presenting a guess as ground truth.
+  const approximateScript = transliterateLatinToTelugu(text);
+  const en = await googleTranslate(approximateScript, "te", "en");
+  return NextResponse.json({
+    en: en || text,
+    script: approximateScript,
+    transliteration: text,
+    source: "approximate",
+  });
 }

@@ -43,6 +43,7 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
 
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  const [translateNotice, setTranslateNotice] = useState<string | null>(null);
 
   const {
     register,
@@ -105,6 +106,7 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
 
     setTranslating(true);
     setTranslateError(null);
+    setTranslateNotice(null);
     try {
       const res = await fetch(`/api/translate?field=${field}&text=${encodeURIComponent(value)}`);
       const data = await res.json();
@@ -115,6 +117,11 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
       setValue("name_en", data.en, { shouldValidate: true });
       setValue("name_te_script", data.script, { shouldValidate: true });
       setValue("name_te_transliteration", data.transliteration, { shouldValidate: true });
+      if (data.source === "approximate") {
+        setTranslateNotice(
+          "This item isn't in our known list, so the Telugu script is an approximate best-guess reconstruction — please double-check it before saving."
+        );
+      }
     } catch {
       setTranslateError("Translation failed — check your connection.");
     } finally {
@@ -161,6 +168,7 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
             <label className="mb-1 block text-sm font-medium">Product image</label>
             <ImageUpload
               type="product"
+              existingUrl={existing?.image_url ?? null}
               onUploaded={({ imageUrl: u, thumbnailUrl: t }) => {
                 setImageUrl(u);
                 setThumbnailUrl(t);
@@ -201,6 +209,7 @@ export function ProductForm({ existing, categories }: { existing?: Product; cate
                 to fill the other two.
               </p>
               {translateError && <p className="mt-1 text-xs text-red-600">{translateError}</p>}
+              {translateNotice && <p className="mt-1 text-xs text-amber-600">{translateNotice}</p>}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Telugu transliteration</label>

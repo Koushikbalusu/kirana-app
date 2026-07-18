@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth/session";
 const navLinks = [
   { href: "/superadmin", label: "Dashboard" },
   { href: "/superadmin/stores", label: "Stores" },
+  { href: "/admin", label: "Manage Store (Admin)" },
+  { href: "/superadmin/settings", label: "Settings" },
 ];
 
 export default async function SuperadminLayout({ children }: { children: React.ReactNode }) {

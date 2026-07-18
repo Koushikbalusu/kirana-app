@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { findUserByEmail, verifyPassword, type Role } from "@/lib/auth/users";
+import { verifyPassword, type Role } from "@/lib/auth/users";
+import { getUserByEmail } from "@/actions/users";
 import { createSession, destroySession } from "@/lib/auth/session";
 import { phoneIdentifyLimiter, checkLimit } from "@/lib/redis/ratelimit";
 
@@ -31,7 +32,7 @@ export async function login(
     return { error: "Too many login attempts. Please wait a minute and try again." };
   }
 
-  const user = findUserByEmail(email);
+  const user = await getUserByEmail(email);
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { error: "Invalid email or password." };
   }

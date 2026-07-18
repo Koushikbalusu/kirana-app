@@ -5,12 +5,14 @@ import { ImageIcon, Upload } from "lucide-react";
 
 export function ImageUpload({
   type = "product",
+  existingUrl = null,
   onUploaded,
 }: {
   type?: string;
+  existingUrl?: string | null;
   onUploaded: (urls: { imageUrl: string; thumbnailUrl: string | null }) => void;
 }) {
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(existingUrl);
   const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
 

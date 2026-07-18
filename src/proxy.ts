@@ -8,8 +8,11 @@ export const config = {
   matcher: ["/admin/:path*", "/delivery/:path*", "/superadmin/:path*"],
 };
 
+// Superadmin can access every admin page too -- superadmin is a superset
+// of admin capability, scoped to a single store for now (see
+// docs/CURRENT_STATE.md for the multi-store follow-up).
 const ROLES_BY_PREFIX: { prefix: string; roles: Role[]; loginPath: string }[] = [
-  { prefix: "/admin", roles: ["ADMIN", "STAFF"], loginPath: "/admin/login" },
+  { prefix: "/admin", roles: ["ADMIN", "STAFF", "SUPERADMIN"], loginPath: "/admin/login" },
   { prefix: "/delivery", roles: ["DELIVERY_PARTNER"], loginPath: "/delivery/login" },
   { prefix: "/superadmin", roles: ["SUPERADMIN"], loginPath: "/superadmin/login" },
 ];
